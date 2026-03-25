@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Daily Counter</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#6c63ff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Counter">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root {
+    --bg: #0f0f13;
+    --surface: #1a1a24;
+    --surface-2: #24243a;
+    --accent: #6c63ff;
+    --accent-glow: rgba(108, 99, 255, 0.35);
+    --accent-light: #8b83ff;
+    --success: #4ade80;
+    --success-glow: rgba(74, 222, 128, 0.3);
+    --text: #e8e8f0;
+    --text-dim: #8888a0;
+    --text-faint: #55556a;
+    --border: #2a2a40;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  .app {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px 20px 80px;
+    padding-top: calc(24px + env(safe-area-inset-top));
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+    padding-left: calc(20px + env(safe-area-inset-left));
+    padding-right: calc(20px + env(safe-area-inset-right));
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    background: linear-gradient(135deg, var(--accent-light), var(--success));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  @media (max-width: 700px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+  }
+
+  .card-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+
+  /* ── Counter ── */
+  .counter-section { grid-column: 1 / -1; }
+
+  .counter-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .count-ring {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    flex-shrink: 0;
+  }
+
+  .count-ring svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+
+  .count-ring .track {
+    fill: none;
+    stroke: var(--surface-2);
+    stroke-width: 8;
+  }
+
+  .count-ring .progress {
+    fill: none;
+    stroke: url(#grad);
+    stroke-width: 8;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .count-ring .center-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transform: none;
+  }
+
+  .count-ring .count-value {
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .count-ring .count-goal {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  .counter-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .btn-count {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, var(--accent), #8b83ff);
+    color: #fff;
+    font-size: 2.5rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 0 40px var(--accent-glow);
+    transition: transform 0.15s, box-shadow 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  .btn-count:hover { transform: scale(1.06); box-shadow: 0 0 60px var(--accent-glow); }
+  .btn-count:active { transform: scale(0.94); }
+
+  .btn-count.achieved {
+    background: linear-gradient(135deg, var(--success), #22c55e);
+    box-shadow: 0 0 40px var(--success-glow);
+  }
+
+  .btn-count.achieved:hover { box-shadow: 0 0 60px var(--success-glow); }
+
+  .btn-small {
+    padding: 8px 20px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .btn-small:hover { background: var(--border); color: var(--text); }
+
+  .counter-btns-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  /* ── Goal Setting ── */
+  .goal-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .goal-bar label {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+
+  .goal-input {
+    width: 80px;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text);
+    font-size: 1rem;
+    text-align: center;
+    outline: none;
+  }
+
+  .goal-input:focus { border-color: var(--accent); }
+
+  .goal-bar .btn-small { margin-left: 4px; }
+
+  /* ── Calendar ── */
+  .cal-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .cal-nav button {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+
+  .cal-nav button:hover { background: var(--surface-2); }
+
+  .cal-nav .cal-month {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    text-align: center;
+  }
+
+  .cal-dow {
+    font-size: 0.7rem;
+    color: var(--text-faint);
+    padding: 4px 0;
+    font-weight: 600;
+  }
+
+  .cal-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    border-radius: 8px;
+    color: var(--text-dim);
+    position: relative;
+  }
+
+  .cal-day.today {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .cal-day.achieved {
+    background: var(--success);
+    color: #0f0f13;
+    font-weight: 700;
+  }
+
+  .cal-day.partial {
+    background: var(--surface-2);
+    color: var(--text);
+  }
+
+  .cal-day.empty { visibility: hidden; }
+
+  /* ── History / Stats ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .stat-box {
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+    padding: 14px 12px;
+    text-align: center;
+  }
+
+  .stat-box .stat-val {
+    font-size: 1.6rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-box .stat-label {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  .chart-container {
+    width: 100%;
+    height: 180px;
+    position: relative;
+  }
+
+  .chart-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* ── History List ── */
+  .history-section { grid-column: 1 / -1; }
+
+  .history-list {
+    max-height: 260px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    transition: background 0.15s;
+  }
+
+  .history-item:hover { background: var(--surface-2); }
+
+  .history-item .hi-date {
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .history-item .hi-count {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+
+  .history-item .hi-badge {
+    font-size: 0.7rem;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+
+  .hi-badge.achieved {
+    background: rgba(74, 222, 128, 0.15);
+    color: var(--success);
+  }
+
+  .hi-badge.partial {
+    background: rgba(108, 99, 255, 0.15);
+    color: var(--accent-light);
+  }
+
+  .empty-state {
+    text-align: center;
+    color: var(--text-faint);
+    font-size: 0.85rem;
+    padding: 24px;
+  }
+
+  /* ── Celebration ── */
+  .celebration {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  .confetti {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    animation: confetti-fall 1.5s ease-out forwards;
+  }
+
+  @keyframes confetti-fall {
+    0% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+    100% { opacity: 0; transform: translateY(60vh) rotate(720deg) scale(0.3); }
+  }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-120%);
+    background: var(--success);
+    color: #0f0f13;
+    padding: 12px 28px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    box-shadow: 0 8px 30px var(--success-glow);
+    z-index: 200;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <h1>Daily Counter</h1>
+  </header>
+
+  <div class="grid">
+    <!-- Counter -->
+    <div class="card counter-section">
+      <div class="counter-display">
+        <div class="count-ring">
+          <svg viewBox="0 0 120 120">
+            <defs>
+              <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#6c63ff"/>
+                <stop offset="100%" stop-color="#4ade80"/>
+              </linearGradient>
+            </defs>
+            <circle class="track" cx="60" cy="60" r="52"/>
+            <circle class="progress" id="progressRing" cx="60" cy="60" r="52"
+              stroke-dasharray="326.73" stroke-dashoffset="326.73"/>
+          </svg>
+          <div class="center-text">
+            <div class="count-value" id="countValue">0</div>
+            <div class="count-goal" id="countGoal">/ 50</div>
+          </div>
+        </div>
+        <div class="counter-actions">
+          <button class="btn-count" id="btnCount" aria-label="カウント追加">+1</button>
+          <div class="counter-btns-row">
+            <button class="btn-small" id="btnUndo">-1</button>
+            <button class="btn-small" id="btnReset">リセット</button>
+          </div>
+        </div>
+      </div>
+      <div class="goal-bar">
+        <label>目標</label>
+        <input type="number" class="goal-input" id="goalInput" value="50" min="1" max="9999">
+        <label>回</label>
+        <button class="btn-small" id="btnGoalSave">保存</button>
+      </div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="card">
+      <div class="card-title">カレンダー</div>
+      <div class="cal-nav">
+        <button id="calPrev">&#8249;</button>
+        <span class="cal-month" id="calMonth"></span>
+        <button id="calNext">&#8250;</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+
+    <!-- Stats -->
+    <div class="card">
+      <div class="card-title">統計</div>
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-val" id="statTotal">0</div>
+          <div class="stat-label">累計達成</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="statStreak">0</div>
+          <div class="stat-label">連続日数</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="statBest">0</div>
+          <div class="stat-label">最長連続</div>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="chartCanvas"></canvas>
+      </div>
+    </div>
+
+    <!-- History -->
+    <div class="card history-section">
+      <div class="card-title">達成履歴</div>
+      <div class="history-list" id="historyList">
+        <div class="empty-state">まだ記録がありません</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="celebration" id="celebration"></div>
+<div class="toast" id="toast">目標達成!</div>
+
+<script>
+(function() {
+  const STORAGE_KEY = 'daily-counter-data';
+  const CIRC = 2 * Math.PI * 52; // ~326.73
+
+  const $ = id => document.getElementById(id);
+
+  // ── State ──
+  let state = loadState();
+
+  function defaultState() {
+    return { goal: 50, today: todayStr(), count: 0, history: {} };
+  }
+
+  function todayStr() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return defaultState();
+      const s = JSON.parse(raw);
+      if (s.today !== todayStr()) {
+        if (s.count > 0) {
+          s.history[s.today] = s.count;
+        }
+        s.today = todayStr();
+        s.count = 0;
+      }
+      return s;
+    } catch { return defaultState(); }
+  }
+
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  // ── Counter ──
+  let justAchieved = false;
+
+  function updateCounter() {
+    $('countValue').textContent = state.count;
+    $('countGoal').textContent = `/ ${state.goal}`;
+    $('goalInput').value = state.goal;
+
+    const pct = Math.min(state.count / state.goal, 1);
+    $('progressRing').style.strokeDashoffset = CIRC * (1 - pct);
+
+    const btn = $('btnCount');
+    const achieved = state.count >= state.goal;
+    btn.classList.toggle('achieved', achieved);
+    btn.textContent = achieved ? '✓' : '+1';
+
+    state.history[state.today] = state.count;
+    save();
+  }
+
+  $('btnCount').addEventListener('click', () => {
+    state.count++;
+    const wasBelow = (state.count - 1) < state.goal;
+    updateCounter();
+    if (state.count >= state.goal && wasBelow) {
+      celebrate();
+    }
+    updateCalendar();
+    updateStats();
+    updateHistory();
+  });
+
+  $('btnUndo').addEventListener('click', () => {
+    if (state.count > 0) {
+      state.count--;
+      updateCounter();
+      updateCalendar();
+      updateStats();
+      updateHistory();
+    }
+  });
+
+  $('btnReset').addEventListener('click', () => {
+    if (state.count === 0) return;
+    if (!confirm('今日のカウントをリセットしますか？')) return;
+    state.count = 0;
+    updateCounter();
+    updateCalendar();
+    updateStats();
+    updateHistory();
+  });
+
+  $('btnGoalSave').addEventListener('click', () => {
+    const v = parseInt($('goalInput').value);
+    if (v > 0 && v <= 9999) {
+      state.goal = v;
+      updateCounter();
+      updateCalendar();
+      updateStats();
+    }
+  });
+
+  $('goalInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') $('btnGoalSave').click();
+  });
+
+  // ── Calendar ──
+  let calYear, calMonth;
+  (function initCal() {
+    const now = new Date();
+    calYear = now.getFullYear();
+    calMonth = now.getMonth();
+  })();
+
+  $('calPrev').addEventListener('click', () => { calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } updateCalendar(); });
+  $('calNext').addEventListener('click', () => { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } updateCalendar(); });
+
+  function updateCalendar() {
+    const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+    $('calMonth').textContent = `${calYear}年 ${months[calMonth]}`;
+
+    const grid = $('calGrid');
+    grid.innerHTML = '';
+
+    const dows = ['月','火','水','木','金','土','日'];
+    dows.forEach(d => {
+      const el = document.createElement('div');
+      el.className = 'cal-dow';
+      el.textContent = d;
+      grid.appendChild(el);
+    });
+
+    const first = new Date(calYear, calMonth, 1);
+    let startDay = first.getDay() - 1;
+    if (startDay < 0) startDay = 6;
+
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const todayString = todayStr();
+
+    for (let i = 0; i < startDay; i++) {
+      const el = document.createElement('div');
+      el.className = 'cal-day empty';
+      grid.appendChild(el);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const el = document.createElement('div');
+      el.className = 'cal-day';
+      el.textContent = d;
+
+      if (dateStr === todayString) el.classList.add('today');
+
+      const cnt = state.history[dateStr];
+      if (cnt !== undefined && cnt > 0) {
+        if (cnt >= state.goal) {
+          el.classList.add('achieved');
+        } else {
+          el.classList.add('partial');
+        }
+      }
+
+      grid.appendChild(el);
+    }
+  }
+
+  // ── Stats ──
+  function updateStats() {
+    const entries = Object.entries(state.history)
+      .filter(([,v]) => v >= state.goal)
+      .map(([k]) => k)
+      .sort();
+
+    $('statTotal').textContent = entries.length;
+
+    let streak = 0, best = 0, curr = 0;
+    const today = new Date();
+
+    for (let i = 0; i <= 365; i++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      const cnt = state.history[ds];
+      if (cnt !== undefined && cnt >= state.goal) {
+        curr++;
+      } else {
+        if (i === 0) { curr = 0; continue; }
+        break;
+      }
+    }
+    streak = curr;
+
+    curr = 0;
+    const allDates = Object.keys(state.history).sort();
+    allDates.forEach(ds => {
+      if (state.history[ds] >= state.goal) {
+        curr++;
+        if (curr > best) best = curr;
+      } else {
+        curr = 0;
+      }
+    });
+
+    $('statStreak').textContent = streak;
+    $('statBest').textContent = best;
+
+    drawChart();
+  }
+
+  // ── Chart ──
+  function drawChart() {
+    const canvas = $('chartCanvas');
+    const ctx = canvas.getContext('2d');
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    const W = rect.width, H = rect.height;
+
+    ctx.clearRect(0, 0, W, H);
+
+    const days = 30;
+    const today = new Date();
+    const data = [];
+    const labels = [];
+
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      data.push(state.history[ds] || 0);
+      labels.push(`${d.getMonth()+1}/${d.getDate()}`);
+    }
+
+    const maxVal = Math.max(state.goal, ...data, 1);
+    const padL = 36, padR = 12, padT = 12, padB = 28;
+    const cW = W - padL - padR;
+    const cH = H - padT - padB;
+
+    // goal line
+    const goalY = padT + cH * (1 - state.goal / maxVal);
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = 'rgba(74,222,128,0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padL, goalY);
+    ctx.lineTo(W - padR, goalY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = 'rgba(74,222,128,0.5)';
+    ctx.font = '10px sans-serif';
+    ctx.fillText(`目標 ${state.goal}`, padL + 4, goalY - 4);
+
+    // bars
+    const barW = Math.max(2, (cW / days) * 0.6);
+    const gap = cW / days;
+
+    data.forEach((v, i) => {
+      const x = padL + gap * i + gap / 2 - barW / 2;
+      const h = v > 0 ? Math.max(2, (v / maxVal) * cH) : 0;
+      const y = padT + cH - h;
+
+      const achieved = v >= state.goal;
+      ctx.fillStyle = achieved ? 'rgba(74,222,128,0.8)' : 'rgba(108,99,255,0.5)';
+      ctx.beginPath();
+      ctx.roundRect(x, y, barW, h, 2);
+      ctx.fill();
+    });
+
+    // x-axis labels (every 5 days)
+    ctx.fillStyle = '#55556a';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'center';
+    for (let i = 0; i < days; i += 5) {
+      const x = padL + gap * i + gap / 2;
+      ctx.fillText(labels[i], x, H - 4);
+    }
+    const lastX = padL + gap * (days - 1) + gap / 2;
+    ctx.fillText(labels[days - 1], lastX, H - 4);
+
+    // y-axis
+    ctx.textAlign = 'right';
+    ctx.fillText('0', padL - 6, padT + cH + 4);
+    ctx.fillText(maxVal, padL - 6, padT + 10);
+  }
+
+  // ── History ──
+  function updateHistory() {
+    const list = $('historyList');
+    const entries = Object.entries(state.history)
+      .filter(([,v]) => v > 0)
+      .sort(([a],[b]) => b.localeCompare(a));
+
+    if (entries.length === 0) {
+      list.innerHTML = '<div class="empty-state">まだ記録がありません</div>';
+      return;
+    }
+
+    list.innerHTML = entries.map(([date, count]) => {
+      const achieved = count >= state.goal;
+      const d = new Date(date + 'T00:00:00');
+      const label = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+      const dow = ['日','月','火','水','木','金','土'][d.getDay()];
+      return `<div class="history-item">
+        <span class="hi-date">${label} (${dow})</span>
+        <span class="hi-count">${count} / ${state.goal} 回</span>
+        <span class="hi-badge ${achieved ? 'achieved' : 'partial'}">${achieved ? '達成' : '途中'}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Celebration ──
+  function celebrate() {
+    const toast = $('toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+
+    const container = $('celebration');
+    const colors = ['#6c63ff','#4ade80','#facc15','#f472b6','#38bdf8','#fb923c'];
+    for (let i = 0; i < 50; i++) {
+      const el = document.createElement('div');
+      el.className = 'confetti';
+      el.style.left = Math.random() * 100 + '%';
+      el.style.top = -10 + 'px';
+      el.style.background = colors[Math.floor(Math.random() * colors.length)];
+      el.style.animationDelay = Math.random() * 0.5 + 's';
+      el.style.animationDuration = (1 + Math.random()) + 's';
+      container.appendChild(el);
+    }
+    setTimeout(() => { container.innerHTML = ''; }, 3000);
+  }
+
+  // ── Responsive chart redraw ──
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(drawChart, 200);
+  });
+
+  // ── Service Worker ──
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+
+  // ── Init ──
+  updateCounter();
+  updateCalendar();
+  updateStats();
+  updateHistory();
+})();
+</script>
+</body>
+</html>
