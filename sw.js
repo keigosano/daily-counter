@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daily-counter-v1';
+const CACHE_NAME = 'daily-counter-v2';
 const ASSETS = [
   './',
   './index.html',

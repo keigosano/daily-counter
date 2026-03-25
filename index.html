@@ -14,16 +14,17 @@
   :root {
     --bg: #0f0f13;
     --surface: #1a1a24;
-    --surface-2: #24243a;
-    --accent: #6c63ff;
-    --accent-glow: rgba(108, 99, 255, 0.35);
-    --accent-light: #8b83ff;
-    --success: #4ade80;
-    --success-glow: rgba(74, 222, 128, 0.3);
-    --text: #e8e8f0;
-    --text-dim: #8888a0;
-    --text-faint: #55556a;
-    --border: #2a2a40;
+    --surface-2: #252540;
+    --accent: #7b6fff;
+    --accent-glow: rgba(123, 111, 255, 0.4);
+    --accent-light: #a89eff;
+    --success: #34d399;
+    --success-glow: rgba(52, 211, 153, 0.35);
+    --warn: #fbbf24;
+    --text: #ffffff;
+    --text-sub: #c0c0d0;
+    --text-dim: #9090aa;
+    --border: #303050;
     --radius: 16px;
     --radius-sm: 10px;
   }
@@ -48,10 +49,7 @@
     padding-right: calc(20px + env(safe-area-inset-right));
   }
 
-  header {
-    text-align: center;
-    margin-bottom: 32px;
-  }
+  header { text-align: center; margin-bottom: 28px; }
 
   header h1 {
     font-size: 1.5rem;
@@ -68,9 +66,7 @@
     gap: 20px;
   }
 
-  @media (max-width: 700px) {
-    .grid { grid-template-columns: 1fr; }
-  }
+  @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
 
   .card {
     background: var(--surface);
@@ -84,13 +80,13 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: var(--text-dim);
+    color: var(--text-sub);
     margin-bottom: 16px;
   }
 
-  /* ── Counter ── */
-  .counter-section { grid-column: 1 / -1; }
+  .full-width { grid-column: 1 / -1; }
 
+  /* ── Counter ── */
   .counter-display {
     display: flex;
     align-items: center;
@@ -106,17 +102,8 @@
     flex-shrink: 0;
   }
 
-  .count-ring svg {
-    width: 100%;
-    height: 100%;
-    transform: rotate(-90deg);
-  }
-
-  .count-ring .track {
-    fill: none;
-    stroke: var(--surface-2);
-    stroke-width: 8;
-  }
+  .count-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .count-ring .track { fill: none; stroke: var(--surface-2); stroke-width: 8; }
 
   .count-ring .progress {
     fill: none;
@@ -126,6 +113,17 @@
     transition: stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
+  .count-ring .overflow-ring {
+    fill: none;
+    stroke: url(#grad-over);
+    stroke-width: 4;
+    stroke-linecap: round;
+    opacity: 0;
+    transition: stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
+  }
+
+  .count-ring .overflow-ring.visible { opacity: 1; }
+
   .count-ring .center-text {
     position: absolute;
     inset: 0;
@@ -133,7 +131,6 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    transform: none;
   }
 
   .count-ring .count-value {
@@ -141,11 +138,12 @@
     font-weight: 800;
     line-height: 1;
     font-variant-numeric: tabular-nums;
+    color: #fff;
   }
 
   .count-ring .count-goal {
     font-size: 0.85rem;
-    color: var(--text-dim);
+    color: var(--text-sub);
     margin-top: 4px;
   }
 
@@ -161,7 +159,7 @@
     height: 120px;
     border-radius: 50%;
     border: none;
-    background: linear-gradient(135deg, var(--accent), #8b83ff);
+    background: linear-gradient(135deg, var(--accent), #9b8fff);
     color: #fff;
     font-size: 2.5rem;
     font-weight: 700;
@@ -177,12 +175,10 @@
 
   .btn-count:hover { transform: scale(1.06); box-shadow: 0 0 60px var(--accent-glow); }
   .btn-count:active { transform: scale(0.94); }
-
   .btn-count.achieved {
     background: linear-gradient(135deg, var(--success), #22c55e);
     box-shadow: 0 0 40px var(--success-glow);
   }
-
   .btn-count.achieved:hover { box-shadow: 0 0 60px var(--success-glow); }
 
   .btn-small {
@@ -190,20 +186,15 @@
     border-radius: 999px;
     border: 1px solid var(--border);
     background: var(--surface-2);
-    color: var(--text-dim);
+    color: var(--text-sub);
     font-size: 0.8rem;
     cursor: pointer;
     transition: background 0.2s, color 0.2s;
   }
+  .btn-small:hover { background: var(--border); color: #fff; }
 
-  .btn-small:hover { background: var(--border); color: var(--text); }
+  .counter-btns-row { display: flex; gap: 8px; }
 
-  .counter-btns-row {
-    display: flex;
-    gap: 8px;
-  }
-
-  /* ── Goal Setting ── */
   .goal-bar {
     display: flex;
     align-items: center;
@@ -213,10 +204,7 @@
     flex-wrap: wrap;
   }
 
-  .goal-bar label {
-    font-size: 0.85rem;
-    color: var(--text-dim);
-  }
+  .goal-bar label { font-size: 0.85rem; color: var(--text-sub); }
 
   .goal-input {
     width: 80px;
@@ -224,15 +212,97 @@
     border-radius: var(--radius-sm);
     border: 1px solid var(--border);
     background: var(--surface-2);
-    color: var(--text);
+    color: #fff;
     font-size: 1rem;
     text-align: center;
     outline: none;
   }
-
   .goal-input:focus { border-color: var(--accent); }
 
-  .goal-bar .btn-small { margin-left: 4px; }
+  /* ── Rank Badge ── */
+  .rank-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .rank-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-2);
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+  }
+
+  .rank-icon { font-size: 1.3rem; }
+
+  .rank-info { display: flex; flex-direction: column; }
+
+  .rank-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .rank-sub {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+  }
+
+  .pts-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .pts-val {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--warn);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pts-label {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .xp-bar-wrap {
+    flex: 1;
+    min-width: 100px;
+    max-width: 200px;
+  }
+
+  .xp-bar-label {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .xp-bar {
+    height: 6px;
+    background: var(--surface-2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .xp-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--success));
+    transition: width 0.5s ease;
+  }
 
   /* ── Calendar ── */
   .cal-nav {
@@ -245,20 +315,16 @@
   .cal-nav button {
     background: none;
     border: none;
-    color: var(--text-dim);
+    color: var(--text-sub);
     font-size: 1.2rem;
     cursor: pointer;
     padding: 4px 8px;
     border-radius: 8px;
     transition: background 0.2s;
   }
-
   .cal-nav button:hover { background: var(--surface-2); }
 
-  .cal-nav .cal-month {
-    font-size: 1rem;
-    font-weight: 600;
-  }
+  .cal-nav .cal-month { font-size: 1rem; font-weight: 600; color: #fff; }
 
   .cal-grid {
     display: grid;
@@ -269,7 +335,7 @@
 
   .cal-dow {
     font-size: 0.7rem;
-    color: var(--text-faint);
+    color: var(--text-dim);
     padding: 4px 0;
     font-weight: 600;
   }
@@ -281,31 +347,32 @@
     justify-content: center;
     font-size: 0.8rem;
     border-radius: 8px;
-    color: var(--text-dim);
+    color: var(--text-sub);
     position: relative;
+    cursor: pointer;
+    transition: background 0.15s;
+    -webkit-tap-highlight-color: transparent;
   }
-
+  .cal-day:hover { background: var(--surface-2); }
   .cal-day.today {
     outline: 2px solid var(--accent);
     outline-offset: -2px;
-    color: var(--text);
+    color: #fff;
     font-weight: 700;
   }
-
   .cal-day.achieved {
     background: var(--success);
     color: #0f0f13;
     font-weight: 700;
   }
-
+  .cal-day.achieved:hover { background: #2bc47a; }
   .cal-day.partial {
     background: var(--surface-2);
-    color: var(--text);
+    color: #fff;
   }
+  .cal-day.empty { visibility: hidden; cursor: default; }
 
-  .cal-day.empty { visibility: hidden; }
-
-  /* ── History / Stats ── */
+  /* ── Stats Dashboard ── */
   .stats-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -324,30 +391,29 @@
     font-size: 1.6rem;
     font-weight: 800;
     font-variant-numeric: tabular-nums;
+    color: #fff;
   }
 
   .stat-box .stat-label {
     font-size: 0.7rem;
-    color: var(--text-dim);
+    color: var(--text-sub);
     margin-top: 2px;
   }
+
+  .stat-box.accent .stat-val { color: var(--accent-light); }
+  .stat-box.success .stat-val { color: var(--success); }
+  .stat-box.warn .stat-val { color: var(--warn); }
 
   .chart-container {
     width: 100%;
     height: 180px;
     position: relative;
   }
-
-  .chart-container canvas {
-    width: 100% !important;
-    height: 100% !important;
-  }
+  .chart-container canvas { width: 100% !important; height: 100% !important; }
 
   /* ── History List ── */
-  .history-section { grid-column: 1 / -1; }
-
   .history-list {
-    max-height: 260px;
+    max-height: 300px;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
@@ -360,19 +426,12 @@
     padding: 10px 12px;
     border-radius: var(--radius-sm);
     transition: background 0.15s;
+    cursor: pointer;
   }
-
   .history-item:hover { background: var(--surface-2); }
 
-  .history-item .hi-date {
-    font-size: 0.85rem;
-    font-weight: 600;
-  }
-
-  .history-item .hi-count {
-    font-size: 0.85rem;
-    color: var(--text-dim);
-  }
+  .history-item .hi-date { font-size: 0.85rem; font-weight: 600; color: #fff; }
+  .history-item .hi-count { font-size: 0.85rem; color: var(--text-sub); }
 
   .history-item .hi-badge {
     font-size: 0.7rem;
@@ -381,30 +440,119 @@
     font-weight: 600;
   }
 
-  .hi-badge.achieved {
-    background: rgba(74, 222, 128, 0.15);
-    color: var(--success);
-  }
-
-  .hi-badge.partial {
-    background: rgba(108, 99, 255, 0.15);
-    color: var(--accent-light);
-  }
+  .hi-badge.achieved { background: rgba(52,211,153,0.2); color: var(--success); }
+  .hi-badge.partial { background: rgba(123,111,255,0.2); color: var(--accent-light); }
 
   .empty-state {
     text-align: center;
-    color: var(--text-faint);
+    color: var(--text-dim);
     font-size: 0.85rem;
     padding: 24px;
   }
 
-  /* ── Celebration ── */
-  .celebration {
+  /* ── Modal ── */
+  .modal-overlay {
     position: fixed;
     inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 300;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
     pointer-events: none;
-    z-index: 100;
+    transition: opacity 0.25s;
   }
+  .modal-overlay.open { opacity: 1; pointer-events: auto; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    width: 320px;
+    max-width: 90vw;
+    transform: scale(0.9);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .modal-overlay.open .modal { transform: scale(1); }
+
+  .modal h3 {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    color: #fff;
+  }
+
+  .modal .modal-date {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+  }
+
+  .modal-count-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .modal-count-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: #fff;
+    font-size: 1.3rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+  }
+  .modal-count-btn:hover { background: var(--border); }
+
+  .modal-count-val {
+    font-size: 2.2rem;
+    font-weight: 800;
+    min-width: 80px;
+    text-align: center;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .modal-btns {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+
+  .modal-btn {
+    padding: 10px 24px;
+    border-radius: 999px;
+    border: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .modal-btn:hover { opacity: 0.85; }
+
+  .modal-btn.primary {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .modal-btn.secondary {
+    background: var(--surface-2);
+    color: var(--text-sub);
+    border: 1px solid var(--border);
+  }
+
+  /* ── Celebration ── */
+  .celebration { position: fixed; inset: 0; pointer-events: none; z-index: 100; }
 
   .confetti {
     position: absolute;
@@ -419,7 +567,6 @@
     100% { opacity: 0; transform: translateY(60vh) rotate(720deg) scale(0.3); }
   }
 
-  /* ── Toast ── */
   .toast {
     position: fixed;
     top: 20px;
@@ -432,10 +579,10 @@
     font-weight: 700;
     font-size: 0.95rem;
     box-shadow: 0 8px 30px var(--success-glow);
-    z-index: 200;
+    z-index: 400;
     transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
   }
-
   .toast.show { transform: translateX(-50%) translateY(0); }
 </style>
 </head>
@@ -447,20 +594,25 @@
   </header>
 
   <div class="grid">
-    <!-- Counter -->
-    <div class="card counter-section">
+    <div class="card full-width">
       <div class="counter-display">
         <div class="count-ring">
           <svg viewBox="0 0 120 120">
             <defs>
               <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#6c63ff"/>
-                <stop offset="100%" stop-color="#4ade80"/>
+                <stop offset="0%" stop-color="#7b6fff"/>
+                <stop offset="100%" stop-color="#34d399"/>
+              </linearGradient>
+              <linearGradient id="grad-over" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#fbbf24"/>
+                <stop offset="100%" stop-color="#f97316"/>
               </linearGradient>
             </defs>
             <circle class="track" cx="60" cy="60" r="52"/>
             <circle class="progress" id="progressRing" cx="60" cy="60" r="52"
               stroke-dasharray="326.73" stroke-dashoffset="326.73"/>
+            <circle class="overflow-ring" id="overflowRing" cx="60" cy="60" r="44"
+              stroke-dasharray="276.46" stroke-dashoffset="276.46"/>
           </svg>
           <div class="center-text">
             <div class="count-value" id="countValue">0</div>
@@ -481,9 +633,30 @@
         <label>回</label>
         <button class="btn-small" id="btnGoalSave">保存</button>
       </div>
+      <div class="rank-section">
+        <div class="rank-badge">
+          <span class="rank-icon" id="rankIcon">🌱</span>
+          <div class="rank-info">
+            <span class="rank-name" id="rankName">ビギナー</span>
+            <span class="rank-sub" id="rankSub">Lv.1</span>
+          </div>
+        </div>
+        <div class="pts-display">
+          <span class="pts-val" id="ptsVal">0</span>
+          <span class="pts-label">Points</span>
+        </div>
+        <div class="xp-bar-wrap">
+          <div class="xp-bar-label">
+            <span id="xpCurrent">0</span>
+            <span id="xpNext">次のランクまで 100pt</span>
+          </div>
+          <div class="xp-bar">
+            <div class="xp-bar-fill" id="xpBarFill" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Calendar -->
     <div class="card">
       <div class="card-title">カレンダー</div>
       <div class="cal-nav">
@@ -494,19 +667,18 @@
       <div class="cal-grid" id="calGrid"></div>
     </div>
 
-    <!-- Stats -->
     <div class="card">
       <div class="card-title">統計</div>
       <div class="stats-row">
-        <div class="stat-box">
+        <div class="stat-box accent">
           <div class="stat-val" id="statTotal">0</div>
           <div class="stat-label">累計達成</div>
         </div>
-        <div class="stat-box">
+        <div class="stat-box success">
           <div class="stat-val" id="statStreak">0</div>
           <div class="stat-label">連続日数</div>
         </div>
-        <div class="stat-box">
+        <div class="stat-box warn">
           <div class="stat-val" id="statBest">0</div>
           <div class="stat-label">最長連続</div>
         </div>
@@ -516,12 +688,28 @@
       </div>
     </div>
 
-    <!-- History -->
-    <div class="card history-section">
+    <div class="card full-width">
       <div class="card-title">達成履歴</div>
       <div class="history-list" id="historyList">
         <div class="empty-state">まだ記録がありません</div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>記録を編集</h3>
+    <div class="modal-date" id="modalDate"></div>
+    <div class="modal-count-row">
+      <button class="modal-count-btn" id="modalMinus">−</button>
+      <div class="modal-count-val" id="modalCount">0</div>
+      <button class="modal-count-btn" id="modalPlus">+</button>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn secondary" id="modalCancel">キャンセル</button>
+      <button class="modal-btn primary" id="modalSave">保存</button>
     </div>
   </div>
 </div>
@@ -532,9 +720,51 @@
 <script>
 (function() {
   const STORAGE_KEY = 'daily-counter-data';
-  const CIRC = 2 * Math.PI * 52; // ~326.73
+  const CIRC = 2 * Math.PI * 52;
+  const CIRC_INNER = 2 * Math.PI * 44;
 
   const $ = id => document.getElementById(id);
+
+  // ── Rank System ──
+  const RANKS = [
+    { name: 'ビギナー',     icon: '🌱', minPts: 0 },
+    { name: 'レギュラー',   icon: '⭐', minPts: 100 },
+    { name: 'ブロンズ',     icon: '🥉', minPts: 300 },
+    { name: 'シルバー',     icon: '🥈', minPts: 600 },
+    { name: 'ゴールド',     icon: '🥇', minPts: 1000 },
+    { name: 'プラチナ',     icon: '💎', minPts: 1800 },
+    { name: 'マスター',     icon: '🔥', minPts: 3000 },
+    { name: 'レジェンド',   icon: '👑', minPts: 5000 },
+    { name: 'チャンピオン', icon: '🏆', minPts: 10000 },
+  ];
+
+  function getRank(pts) {
+    let rank = RANKS[0], idx = 0;
+    for (let i = RANKS.length - 1; i >= 0; i--) {
+      if (pts >= RANKS[i].minPts) { rank = RANKS[i]; idx = i; break; }
+    }
+    const next = RANKS[idx + 1] || null;
+    return { rank, idx, next };
+  }
+
+  function calcPoints(hist, goal) {
+    let pts = 0;
+    const sorted = Object.keys(hist).sort();
+    let streak = 0;
+    sorted.forEach(ds => {
+      const cnt = hist[ds];
+      if (cnt >= goal) {
+        pts += 10;
+        streak++;
+        if (streak >= 7) pts += 5;
+        if (streak >= 30) pts += 10;
+      } else {
+        if (cnt > 0) pts += 2;
+        streak = 0;
+      }
+    });
+    return pts;
+  }
 
   // ── State ──
   let state = loadState();
@@ -554,9 +784,7 @@
       if (!raw) return defaultState();
       const s = JSON.parse(raw);
       if (s.today !== todayStr()) {
-        if (s.count > 0) {
-          s.history[s.today] = s.count;
-        }
+        if (s.count > 0) s.history[s.today] = s.count;
         s.today = todayStr();
         s.count = 0;
       }
@@ -569,8 +797,6 @@
   }
 
   // ── Counter ──
-  let justAchieved = false;
-
   function updateCounter() {
     $('countValue').textContent = state.count;
     $('countGoal').textContent = `/ ${state.goal}`;
@@ -579,22 +805,31 @@
     const pct = Math.min(state.count / state.goal, 1);
     $('progressRing').style.strokeDashoffset = CIRC * (1 - pct);
 
+    const overRing = $('overflowRing');
+    if (state.count > state.goal) {
+      const overPct = Math.min((state.count - state.goal) / state.goal, 1);
+      overRing.style.strokeDashoffset = CIRC_INNER * (1 - overPct);
+      overRing.classList.add('visible');
+    } else {
+      overRing.style.strokeDashoffset = CIRC_INNER;
+      overRing.classList.remove('visible');
+    }
+
     const btn = $('btnCount');
     const achieved = state.count >= state.goal;
     btn.classList.toggle('achieved', achieved);
-    btn.textContent = achieved ? '✓' : '+1';
+    btn.textContent = achieved ? '+1' : '+1';
 
     state.history[state.today] = state.count;
     save();
+    updateRank();
   }
 
   $('btnCount').addEventListener('click', () => {
     state.count++;
     const wasBelow = (state.count - 1) < state.goal;
     updateCounter();
-    if (state.count >= state.goal && wasBelow) {
-      celebrate();
-    }
+    if (state.count >= state.goal && wasBelow) celebrate();
     updateCalendar();
     updateStats();
     updateHistory();
@@ -627,6 +862,7 @@
       updateCounter();
       updateCalendar();
       updateStats();
+      updateHistory();
     }
   });
 
@@ -634,9 +870,34 @@
     if (e.key === 'Enter') $('btnGoalSave').click();
   });
 
+  // ── Rank ──
+  function updateRank() {
+    const pts = calcPoints(state.history, state.goal);
+    const { rank, next } = getRank(pts);
+
+    $('rankIcon').textContent = rank.icon;
+    $('rankName').textContent = rank.name;
+    $('ptsVal').textContent = pts.toLocaleString();
+
+    if (next) {
+      const ptsInRank = pts - rank.minPts;
+      const ptsNeeded = next.minPts - rank.minPts;
+      const pct = Math.min((ptsInRank / ptsNeeded) * 100, 100);
+      $('rankSub').textContent = `次: ${next.name}`;
+      $('xpCurrent').textContent = `${ptsInRank}pt`;
+      $('xpNext').textContent = `あと ${next.minPts - pts}pt`;
+      $('xpBarFill').style.width = pct + '%';
+    } else {
+      $('rankSub').textContent = 'MAX RANK';
+      $('xpCurrent').textContent = '';
+      $('xpNext').textContent = '最高ランク到達!';
+      $('xpBarFill').style.width = '100%';
+    }
+  }
+
   // ── Calendar ──
   let calYear, calMonth;
-  (function initCal() {
+  (function() {
     const now = new Date();
     calYear = now.getFullYear();
     calMonth = now.getMonth();
@@ -652,8 +913,7 @@
     const grid = $('calGrid');
     grid.innerHTML = '';
 
-    const dows = ['月','火','水','木','金','土','日'];
-    dows.forEach(d => {
+    ['月','火','水','木','金','土','日'].forEach(d => {
       const el = document.createElement('div');
       el.className = 'cal-dow';
       el.textContent = d;
@@ -663,7 +923,6 @@
     const first = new Date(calYear, calMonth, 1);
     let startDay = first.getDay() - 1;
     if (startDay < 0) startDay = 6;
-
     const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
     const todayString = todayStr();
 
@@ -683,29 +942,76 @@
 
       const cnt = state.history[dateStr];
       if (cnt !== undefined && cnt > 0) {
-        if (cnt >= state.goal) {
-          el.classList.add('achieved');
-        } else {
-          el.classList.add('partial');
-        }
+        el.classList.add(cnt >= state.goal ? 'achieved' : 'partial');
       }
 
+      el.addEventListener('click', () => openEditModal(dateStr));
       grid.appendChild(el);
     }
   }
 
+  // ── Edit Modal ──
+  let editingDate = null;
+  let editingCount = 0;
+
+  function openEditModal(dateStr) {
+    editingDate = dateStr;
+    editingCount = state.history[dateStr] || 0;
+
+    const d = new Date(dateStr + 'T00:00:00');
+    const dow = ['日','月','火','水','木','金','土'][d.getDay()];
+    $('modalDate').textContent = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} (${dow})`;
+    $('modalCount').textContent = editingCount;
+    $('modalOverlay').classList.add('open');
+  }
+
+  function closeModal() {
+    $('modalOverlay').classList.remove('open');
+    editingDate = null;
+  }
+
+  $('modalPlus').addEventListener('click', () => {
+    editingCount++;
+    $('modalCount').textContent = editingCount;
+  });
+
+  $('modalMinus').addEventListener('click', () => {
+    if (editingCount > 0) {
+      editingCount--;
+      $('modalCount').textContent = editingCount;
+    }
+  });
+
+  $('modalCancel').addEventListener('click', closeModal);
+
+  $('modalOverlay').addEventListener('click', e => {
+    if (e.target === $('modalOverlay')) closeModal();
+  });
+
+  $('modalSave').addEventListener('click', () => {
+    if (editingDate === state.today) {
+      state.count = editingCount;
+    }
+    if (editingCount > 0) {
+      state.history[editingDate] = editingCount;
+    } else {
+      delete state.history[editingDate];
+    }
+    save();
+    if (editingDate === state.today) updateCounter();
+    updateCalendar();
+    updateStats();
+    updateHistory();
+    closeModal();
+  });
+
   // ── Stats ──
   function updateStats() {
-    const entries = Object.entries(state.history)
-      .filter(([,v]) => v >= state.goal)
-      .map(([k]) => k)
-      .sort();
+    const achieved = Object.entries(state.history).filter(([,v]) => v >= state.goal);
+    $('statTotal').textContent = achieved.length;
 
-    $('statTotal').textContent = entries.length;
-
-    let streak = 0, best = 0, curr = 0;
+    let streak = 0, curr = 0;
     const today = new Date();
-
     for (let i = 0; i <= 365; i++) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
@@ -720,20 +1026,15 @@
     }
     streak = curr;
 
+    let best = 0;
     curr = 0;
-    const allDates = Object.keys(state.history).sort();
-    allDates.forEach(ds => {
-      if (state.history[ds] >= state.goal) {
-        curr++;
-        if (curr > best) best = curr;
-      } else {
-        curr = 0;
-      }
+    Object.keys(state.history).sort().forEach(ds => {
+      if (state.history[ds] >= state.goal) { curr++; if (curr > best) best = curr; }
+      else curr = 0;
     });
 
     $('statStreak').textContent = streak;
     $('statBest').textContent = best;
-
     drawChart();
   }
 
@@ -747,13 +1048,11 @@
     canvas.height = rect.height * dpr;
     ctx.scale(dpr, dpr);
     const W = rect.width, H = rect.height;
-
     ctx.clearRect(0, 0, W, H);
 
     const days = 30;
     const today = new Date();
-    const data = [];
-    const labels = [];
+    const data = [], labels = [];
 
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date(today);
@@ -764,56 +1063,82 @@
     }
 
     const maxVal = Math.max(state.goal, ...data, 1);
-    const padL = 36, padR = 12, padT = 12, padB = 28;
-    const cW = W - padL - padR;
-    const cH = H - padT - padB;
+    const padL = 40, padR = 12, padT = 16, padB = 32;
+    const cW = W - padL - padR, cH = H - padT - padB;
+
+    // grid lines
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+      const y = padT + (cH / 4) * i;
+      ctx.beginPath();
+      ctx.moveTo(padL, y);
+      ctx.lineTo(W - padR, y);
+      ctx.stroke();
+    }
 
     // goal line
     const goalY = padT + cH * (1 - state.goal / maxVal);
-    ctx.setLineDash([4, 4]);
-    ctx.strokeStyle = 'rgba(74,222,128,0.3)';
-    ctx.lineWidth = 1;
+    ctx.setLineDash([6, 4]);
+    ctx.strokeStyle = 'rgba(52,211,153,0.5)';
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(padL, goalY);
     ctx.lineTo(W - padR, goalY);
     ctx.stroke();
     ctx.setLineDash([]);
 
-    ctx.fillStyle = 'rgba(74,222,128,0.5)';
-    ctx.font = '10px sans-serif';
-    ctx.fillText(`目標 ${state.goal}`, padL + 4, goalY - 4);
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 11px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`目標 ${state.goal}`, padL + 4, goalY - 6);
 
     // bars
-    const barW = Math.max(2, (cW / days) * 0.6);
+    const barW = Math.max(3, (cW / days) * 0.55);
     const gap = cW / days;
 
     data.forEach((v, i) => {
       const x = padL + gap * i + gap / 2 - barW / 2;
-      const h = v > 0 ? Math.max(2, (v / maxVal) * cH) : 0;
+      const h = v > 0 ? Math.max(3, (v / maxVal) * cH) : 0;
       const y = padT + cH - h;
-
       const achieved = v >= state.goal;
-      ctx.fillStyle = achieved ? 'rgba(74,222,128,0.8)' : 'rgba(108,99,255,0.5)';
-      ctx.beginPath();
-      ctx.roundRect(x, y, barW, h, 2);
-      ctx.fill();
+
+      if (achieved) {
+        const grad = ctx.createLinearGradient(x, y, x, y + h);
+        grad.addColorStop(0, '#34d399');
+        grad.addColorStop(1, '#059669');
+        ctx.fillStyle = grad;
+      } else if (v > 0) {
+        const grad = ctx.createLinearGradient(x, y, x, y + h);
+        grad.addColorStop(0, '#a89eff');
+        grad.addColorStop(1, '#6c63ff');
+        ctx.fillStyle = grad;
+      }
+
+      if (v > 0) {
+        ctx.beginPath();
+        ctx.roundRect(x, y, barW, h, 3);
+        ctx.fill();
+      }
     });
 
-    // x-axis labels (every 5 days)
-    ctx.fillStyle = '#55556a';
+    // x-axis
+    ctx.fillStyle = '#c0c0d0';
     ctx.font = '10px sans-serif';
     ctx.textAlign = 'center';
     for (let i = 0; i < days; i += 5) {
-      const x = padL + gap * i + gap / 2;
-      ctx.fillText(labels[i], x, H - 4);
+      ctx.fillText(labels[i], padL + gap * i + gap / 2, H - 6);
     }
-    const lastX = padL + gap * (days - 1) + gap / 2;
-    ctx.fillText(labels[days - 1], lastX, H - 4);
+    ctx.fillText(labels[days - 1], padL + gap * (days - 1) + gap / 2, H - 6);
 
     // y-axis
+    ctx.fillStyle = '#c0c0d0';
+    ctx.font = '10px sans-serif';
     ctx.textAlign = 'right';
     ctx.fillText('0', padL - 6, padT + cH + 4);
     ctx.fillText(maxVal, padL - 6, padT + 10);
+    const mid = Math.round(maxVal / 2);
+    ctx.fillText(mid, padL - 6, padT + cH / 2 + 4);
   }
 
   // ── History ──
@@ -833,22 +1158,27 @@
       const d = new Date(date + 'T00:00:00');
       const label = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
       const dow = ['日','月','火','水','木','金','土'][d.getDay()];
-      return `<div class="history-item">
+      return `<div class="history-item" data-date="${date}">
         <span class="hi-date">${label} (${dow})</span>
         <span class="hi-count">${count} / ${state.goal} 回</span>
         <span class="hi-badge ${achieved ? 'achieved' : 'partial'}">${achieved ? '達成' : '途中'}</span>
       </div>`;
     }).join('');
+
+    list.querySelectorAll('.history-item').forEach(el => {
+      el.addEventListener('click', () => openEditModal(el.dataset.date));
+    });
   }
 
   // ── Celebration ──
   function celebrate() {
     const toast = $('toast');
+    toast.textContent = '目標達成!';
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 2500);
 
     const container = $('celebration');
-    const colors = ['#6c63ff','#4ade80','#facc15','#f472b6','#38bdf8','#fb923c'];
+    const colors = ['#7b6fff','#34d399','#fbbf24','#f472b6','#38bdf8','#fb923c'];
     for (let i = 0; i < 50; i++) {
       const el = document.createElement('div');
       el.className = 'confetti';
@@ -862,19 +1192,13 @@
     setTimeout(() => { container.innerHTML = ''; }, 3000);
   }
 
-  // ── Responsive chart redraw ──
   let resizeTimer;
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(drawChart, 200);
-  });
+  window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(drawChart, 200); });
 
-  // ── Service Worker ──
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   }
 
-  // ── Init ──
   updateCounter();
   updateCalendar();
   updateStats();
