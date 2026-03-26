@@ -720,8 +720,11 @@
 <script>
 (function() {
   const STORAGE_KEY = 'daily-counter-data';
+  const API_URL = 'https://daily-counter-api.keigosano.workers.dev';
+  const API_KEY = 'd478b5c730338e8ba746fd1eee4649ef';
   const CIRC = 2 * Math.PI * 52;
   const CIRC_INNER = 2 * Math.PI * 44;
+  const SYNC_INTERVAL = 30000;
 
   const $ = id => document.getElementById(id);
 
@@ -796,6 +799,61 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }
 
+  // ── Cloud Sync ──
+  async function apiGet(path) {
+    try {
+      const r = await fetch(`${API_URL}${path}`, { headers: { 'X-API-Key': API_KEY } });
+      return await r.json();
+    } catch { return null; }
+  }
+
+  async function apiPost(path, body) {
+    try {
+      const r = await fetch(`${API_URL}${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY },
+        body: JSON.stringify(body),
+      });
+      return await r.json();
+    } catch { return null; }
+  }
+
+  async function syncFromCloud() {
+    const data = await apiGet('/counts');
+    if (!data || !data.counts) return;
+    const cloud = data.counts;
+    let changed = false;
+    for (const [date, cnt] of Object.entries(cloud)) {
+      const local = state.history[date] || 0;
+      if (cnt > local) {
+        state.history[date] = cnt;
+        changed = true;
+      }
+    }
+    const todayCloud = cloud[state.today] || 0;
+    if (todayCloud > state.count) {
+      state.count = todayCloud;
+      changed = true;
+    }
+    if (changed) {
+      save();
+      updateCounter();
+      updateCalendar();
+      updateStats();
+      updateHistory();
+    }
+  }
+
+  async function syncToCloud(date, count) {
+    await apiPost('/set', { date, count });
+  }
+
+  async function fullSyncToCloud() {
+    for (const [date, count] of Object.entries(state.history)) {
+      if (count > 0) await apiPost('/set', { date, count });
+    }
+  }
+
   // ── Counter ──
   function updateCounter() {
     $('countValue').textContent = state.count;
@@ -822,6 +880,7 @@
 
     state.history[state.today] = state.count;
     save();
+    syncToCloud(state.today, state.count);
     updateRank();
   }
 
@@ -1005,6 +1064,7 @@
       delete state.history[editingDate];
     }
     save();
+    syncToCloud(editingDate, editingCount);
     if (editingDate === state.today) updateCounter();
     updateCalendar();
     updateStats();
@@ -1210,6 +1270,13 @@
   updateCalendar();
   updateStats();
   updateHistory();
+
+  // Initial cloud sync + upload local data, then periodic pull
+  (async () => {
+    await fullSyncToCloud();
+    await syncFromCloud();
+    setInterval(syncFromCloud, SYNC_INTERVAL);
+  })();
 })();
 </script>
 </body>
