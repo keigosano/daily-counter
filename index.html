@@ -724,7 +724,7 @@
   const API_KEY = 'd478b5c730338e8ba746fd1eee4649ef';
   const CIRC = 2 * Math.PI * 52;
   const CIRC_INNER = 2 * Math.PI * 44;
-  const SYNC_INTERVAL = 30000;
+  const SYNC_INTERVAL = 12000;
 
   const $ = id => document.getElementById(id);
 
@@ -818,40 +818,62 @@
     } catch { return null; }
   }
 
-  async function syncFromCloud() {
+  /** クラウドとローカルを日付ごとに MAX でマージ（先にプッシュすると古い端末が上書きするバグを防ぐ） */
+  async function mergeCloudIntoLocal() {
     const data = await apiGet('/counts');
-    if (!data || !data.counts) return;
+    if (!data || !data.counts) return false;
     const cloud = data.counts;
     let changed = false;
-    for (const [date, cnt] of Object.entries(cloud)) {
-      const local = state.history[date] || 0;
-      if (cnt > local) {
-        state.history[date] = cnt;
+
+    const allDates = new Set([...Object.keys(state.history), ...Object.keys(cloud)]);
+    for (const date of allDates) {
+      const a = state.history[date] || 0;
+      const b = cloud[date] || 0;
+      const m = Math.max(a, b);
+      if (m > 0) {
+        if (state.history[date] !== m) {
+          state.history[date] = m;
+          changed = true;
+        }
+      } else if (state.history[date]) {
+        delete state.history[date];
         changed = true;
       }
     }
-    const todayCloud = cloud[state.today] || 0;
-    if (todayCloud > state.count) {
-      state.count = todayCloud;
+
+    const tc = cloud[state.today] || 0;
+    const mergedToday = Math.max(state.count, state.history[state.today] || 0, tc);
+    if (state.count !== mergedToday) {
+      state.count = mergedToday;
       changed = true;
     }
-    if (changed) {
-      save();
-      updateCounter();
-      updateCalendar();
-      updateStats();
-      updateHistory();
+    state.history[state.today] = state.count;
+
+    if (data.goal != null && data.goal >= 1 && data.goal <= 9999) {
+      const ng = Math.max(state.goal, data.goal);
+      if (ng !== state.goal) {
+        state.goal = ng;
+        changed = true;
+      }
     }
+
+    if (changed) save();
+    return changed;
   }
 
   async function syncToCloud(date, count) {
     await apiPost('/set', { date, count });
   }
 
-  async function fullSyncToCloud() {
+  async function pushAllToCloud() {
     for (const [date, count] of Object.entries(state.history)) {
       if (count > 0) await apiPost('/set', { date, count });
     }
+    await apiPost('/goal', { goal: state.goal });
+  }
+
+  async function syncGoalToCloud() {
+    await apiPost('/goal', { goal: state.goal });
   }
 
   // ── Counter ──
@@ -929,6 +951,7 @@
       updateCalendar();
       updateStats();
       updateHistory();
+      syncGoalToCloud();
     }
   });
 
@@ -1262,21 +1285,39 @@
   let resizeTimer;
   window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(drawChart, 200); });
 
+  function refreshAll() {
+    updateCounter();
+    updateCalendar();
+    updateStats();
+    updateHistory();
+  }
+
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   }
 
-  updateCounter();
-  updateCalendar();
-  updateStats();
-  updateHistory();
-
-  // Initial cloud sync + upload local data, then periodic pull
   (async () => {
-    await fullSyncToCloud();
-    await syncFromCloud();
-    setInterval(syncFromCloud, SYNC_INTERVAL);
+    await mergeCloudIntoLocal();
+    refreshAll();
+    await pushAllToCloud();
+
+    setInterval(async () => {
+      const ch = await mergeCloudIntoLocal();
+      if (ch) refreshAll();
+    }, SYNC_INTERVAL);
   })();
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      mergeCloudIntoLocal().then(ch => { if (ch) refreshAll(); });
+    }
+  });
+
+  window.addEventListener('pageshow', (ev) => {
+    if (ev.persisted) {
+      mergeCloudIntoLocal().then(ch => { if (ch) refreshAll(); });
+    }
+  });
 })();
 </script>
 </body>
